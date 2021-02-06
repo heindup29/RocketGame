@@ -1,19 +1,49 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class CollisionHandler : MonoBehaviour
 {    
-    Movement movement;
-
     [SerializeField] float sceneTransionDelayTime = 2f;
+    [SerializeField] AudioClip crashSound;
+    [SerializeField] AudioClip successSound;
+    [SerializeField] ParticleSystem successPartical;
+    [SerializeField] ParticleSystem crashPartical;
+
+
+    Movement movement;
+    AudioSource audioSourceForPlayer;
+
+    bool isTransitioning = false;
+    bool collisionDisabled = false;
 
     void Start()
     {
         movement = GetComponent<Movement>();
+        audioSourceForPlayer = GetComponent<AudioSource>();
+    }
+
+    void Update()
+    {
+        ProcessCheats();
+    }
+
+    void ProcessCheats()
+    {
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            StartNextLevelSequance();
+        }
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            collisionDisabled = !collisionDisabled;
+        }
     }
 
     void OnCollisionEnter(Collision other)
     {
+        if (isTransitioning || collisionDisabled) return;
+        
         switch (other.transform.tag)
         {
             case "Friendly": break;
@@ -30,14 +60,22 @@ public class CollisionHandler : MonoBehaviour
 
     void StartCrashSequance()
     {
+        isTransitioning = true;
         movement.enabled = false;
-        Invoke("ReloadLevel", sceneTransionDelayTime);        
+        audioSourceForPlayer.Stop();
+        crashPartical.Play();
+        audioSourceForPlayer.PlayOneShot(crashSound);            
+        Invoke("ReloadLevel", sceneTransionDelayTime);
     }
 
     void StartNextLevelSequance()
     {
+        isTransitioning = true;
         movement.enabled = false;
-        Invoke("LoadNextLevel", sceneTransionDelayTime);
+        audioSourceForPlayer.Stop();
+        successPartical.Play();
+        audioSourceForPlayer.PlayOneShot(successSound);
+        Invoke("LoadNextLevel", sceneTransionDelayTime);       
     }
 
     void LoadNextLevel()

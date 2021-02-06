@@ -6,11 +6,14 @@ public class Movement : MonoBehaviour
 {
     [SerializeField] float thrusterPower = 100f;
     [SerializeField] float thrustRotation = 100f;
+    [SerializeField] AudioClip thrustSound;
+    [SerializeField] ParticleSystem thrustLeft;
+    [SerializeField] ParticleSystem thrustRight;
+    [SerializeField] ParticleSystem thrustMain;
 
     Rigidbody rb;
-    AudioSource audioSource;
-    
-    
+    AudioSource audioSource; 
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -28,31 +31,72 @@ public class Movement : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.Space))
         {
-            rb.AddRelativeForce(Vector3.up * thrusterPower * Time.deltaTime);
-            if (!audioSource.isPlaying)
-            {
-                audioSource.Play();
-            }
+            StartThrusting();
+
         }
         else
         {
-            if (audioSource.isPlaying)
-            {
-                audioSource.Stop();
-            }
+            StopThrusting();
         }
-        
+
+    }
+
+    void StopThrusting()
+    {
+        thrustMain.Stop();
+        if (audioSource.isPlaying)
+        {
+            audioSource.Stop();
+        }
+    }
+
+    void StartThrusting()
+    {
+        rb.AddRelativeForce(Vector3.up * thrusterPower * Time.deltaTime);
+        if (!audioSource.isPlaying)
+        {
+            audioSource.PlayOneShot(thrustSound);
+        }
+        if (!thrustMain.isPlaying)
+        {
+            thrustMain.Play();
+        }
     }
 
     void ProcessRotation()
     {
         if (Input.GetKey(KeyCode.A))
         {
-            ApplyRotationThrust(thrustRotation);
+            LeftRotatingThrust();
         }
         else if (Input.GetKey(KeyCode.D))
         {
-            ApplyRotationThrust(-thrustRotation);
+            RightRotatingThrust();
+        }
+        else
+        {
+            thrustRight.Stop();
+            thrustLeft.Stop();
+        }
+    }
+
+    void RightRotatingThrust()
+    {
+        ApplyRotationThrust(-thrustRotation);
+        if (!thrustRight.isPlaying)
+        {
+            thrustRight.Play();
+            thrustLeft.Stop();
+        }
+    }
+
+    void LeftRotatingThrust()
+    {
+        ApplyRotationThrust(thrustRotation);
+        if (!thrustLeft.isPlaying)
+        {
+            thrustLeft.Play();
+            thrustRight.Stop();
         }
     }
 
@@ -60,6 +104,6 @@ public class Movement : MonoBehaviour
     {
         rb.freezeRotation = true;
         transform.Rotate(Vector3.forward * thurst * Time.deltaTime);
-        rb.freezeRotation = false;
+        rb.freezeRotation = false;       
     }
 }
